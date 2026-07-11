@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lista de Tarefas — Daniel</title>
+<style>
+  :root{
+    --bg:#0a0e17;--card:#131b2e;--border:#1e2a45;--text:#e6ecf7;--muted:#8b98b8;
+    --accent:#4f8cff;--accent2:#8b5cf6;--grad:linear-gradient(135deg,#4f8cff,#8b5cf6);
+    --ok:#22c55e;--del:#ef4444;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);
+    min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:40px 16px;
+  }
+  a.voltar{color:var(--muted);text-decoration:none;font-size:.9rem;align-self:flex-start;max-width:520px;width:100%;margin:0 auto 18px}
+  a.voltar:hover{color:var(--accent)}
+  .app{width:100%;max-width:520px;background:var(--card);border:1px solid var(--border);border-radius:18px;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+  h1{font-size:1.5rem;margin-bottom:4px}
+  h1 span{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .sub{color:var(--muted);font-size:.9rem;margin-bottom:22px}
+  form{display:flex;gap:10px;margin-bottom:18px}
+  input[type=text]{
+    flex:1;padding:13px 16px;border-radius:10px;border:1px solid var(--border);
+    background:var(--bg);color:var(--text);font-size:1rem;outline:none;
+  }
+  input[type=text]:focus{border-color:var(--accent)}
+  button.add{
+    background:var(--grad);color:#fff;border:none;border-radius:10px;padding:0 22px;
+    font-size:1.4rem;cursor:pointer;transition:transform .15s;
+  }
+  button.add:hover{transform:scale(1.05)}
+  .filtros{display:flex;gap:8px;margin-bottom:16px}
+  .filtros button{
+    background:transparent;border:1px solid var(--border);color:var(--muted);
+    padding:7px 16px;border-radius:999px;cursor:pointer;font-size:.85rem;transition:all .2s;
+  }
+  .filtros button.ativo{background:rgba(79,140,255,.15);border-color:var(--accent);color:var(--text)}
+  ul{list-style:none;display:flex;flex-direction:column;gap:10px;min-height:60px}
+  li{
+    display:flex;align-items:center;gap:12px;background:var(--bg);
+    border:1px solid var(--border);border-radius:12px;padding:13px 16px;
+    animation:entrar .25s ease;
+  }
+  @keyframes entrar{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+  li .check{
+    width:22px;height:22px;border-radius:50%;border:2px solid var(--muted);
+    cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+    font-size:.75rem;color:transparent;transition:all .2s;background:transparent;
+  }
+  li.feita .check{background:var(--ok);border-color:var(--ok);color:#fff}
+  li p{flex:1;font-size:.98rem;word-break:break-word}
+  li.feita p{text-decoration:line-through;color:var(--muted)}
+  li .del{
+    background:transparent;border:none;color:var(--muted);cursor:pointer;
+    font-size:1.1rem;transition:color .2s;
+  }
+  li .del:hover{color:var(--del)}
+  .vazio{color:var(--muted);text-align:center;padding:24px 0;font-size:.9rem}
+  .rodape{display:flex;justify-content:space-between;align-items:center;margin-top:18px;color:var(--muted);font-size:.85rem}
+  .rodape button{background:none;border:none;color:var(--muted);cursor:pointer;font-size:.85rem}
+  .rodape button:hover{color:var(--del)}
+</style>
+</head>
+<body>
+<a class="voltar" href="index.html">← voltar ao portfólio</a>
+<div class="app">
+  <h1>✅ Minhas <span>Tarefas</span></h1>
+  <p class="sub">Organize seu dia. Suas tarefas ficam salvas no navegador.</p>
+  <form id="form">
+    <input type="text" id="entrada" placeholder="O que precisa ser feito?" maxlength="120" autofocus>
+    <button type="submit" class="add">+</button>
+  </form>
+  <div class="filtros">
+    <button data-f="todas" class="ativo">Todas</button>
+    <button data-f="ativas">Ativas</button>
+    <button data-f="feitas">Concluídas</button>
+  </div>
+  <ul id="lista"></ul>
+  <div class="rodape">
+    <span id="contador">0 tarefas</span>
+    <button id="limpar">Limpar concluídas</button>
+  </div>
+</div>
+<script>
+  let tarefas=JSON.parse(localStorage.getItem('tarefas')||'[]');
+  let filtro='todas';
+  const lista=document.getElementById('lista');
+  const entrada=document.getElementById('entrada');
+  const contador=document.getElementById('contador');
+
+  function salvar(){localStorage.setItem('tarefas',JSON.stringify(tarefas))}
+
+  function render(){
+    lista.innerHTML='';
+    const visiveis=tarefas.filter(t=>
+      filtro==='todas'||(filtro==='ativas'&&!t.feita)||(filtro==='feitas'&&t.feita)
+    );
+    if(visiveis.length===0){
+      lista.innerHTML='<p class="vazio">Nenhuma tarefa por aqui 🎉</p>';
+    }
+    visiveis.forEach(t=>{
+      const li=document.createElement('li');
+      if(t.feita)li.classList.add('feita');
+      li.innerHTML=`
+        <button class="check" title="Concluir">✓</button>
+        <p></p>
+        <button class="del" title="Excluir">✕</button>`;
+      li.querySelector('p').textContent=t.texto;
+      li.querySelector('.check').onclick=()=>{t.feita=!t.feita;salvar();render()};
+      li.querySelector('.del').onclick=()=>{tarefas=tarefas.filter(x=>x!==t);salvar();render()};
+      lista.appendChild(li);
+    });
+    const ativas=tarefas.filter(t=>!t.feita).length;
+    contador.textContent=`${ativas} tarefa${ativas!==1?'s':''} pendente${ativas!==1?'s':''}`;
+  }
+
+  document.getElementById('form').onsubmit=e=>{
+    e.preventDefault();
+    const texto=entrada.value.trim();
+    if(!texto)return;
+    tarefas.unshift({texto,feita:false});
+    entrada.value='';
+    salvar();render();
+  };
+
+  document.querySelectorAll('.filtros button').forEach(b=>{
+    b.onclick=()=>{
+      filtro=b.dataset.f;
+      document.querySelectorAll('.filtros button').forEach(x=>x.classList.remove('ativo'));
+      b.classList.add('ativo');
+      render();
+    };
+  });
+
+  document.getElementById('limpar').onclick=()=>{
+    tarefas=tarefas.filter(t=>!t.feita);salvar();render();
+  };
+
+  render();
+</script>
+</body>
+</html>

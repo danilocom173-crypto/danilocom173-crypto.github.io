@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>App de Clima — Daniel</title>
+<style>
+  :root{
+    --bg:#0a0e17;--card:#131b2e;--border:#1e2a45;--text:#e6ecf7;--muted:#8b98b8;
+    --accent:#4f8cff;--grad:linear-gradient(135deg,#4f8cff,#8b5cf6);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);
+    min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:40px 16px;
+  }
+  a.voltar{color:var(--muted);text-decoration:none;font-size:.9rem;max-width:520px;width:100%;margin:0 auto 18px}
+  a.voltar:hover{color:var(--accent)}
+  .app{width:100%;max-width:520px;background:var(--card);border:1px solid var(--border);border-radius:18px;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+  h1{font-size:1.5rem;margin-bottom:4px}
+  h1 span{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .sub{color:var(--muted);font-size:.9rem;margin-bottom:22px}
+  form{display:flex;gap:10px}
+  input{
+    flex:1;padding:13px 16px;border-radius:10px;border:1px solid var(--border);
+    background:var(--bg);color:var(--text);font-size:1rem;outline:none;
+  }
+  input:focus{border-color:var(--accent)}
+  button{
+    background:var(--grad);color:#fff;border:none;border-radius:10px;padding:0 24px;
+    font-size:1rem;font-weight:600;cursor:pointer;transition:transform .15s;
+  }
+  button:hover{transform:scale(1.04)}
+  .msg{color:var(--muted);text-align:center;padding:26px 0;font-size:.95rem}
+  .resultado{display:none;margin-top:24px;animation:surgir .4s ease}
+  @keyframes surgir{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+  .atual{
+    text-align:center;padding:26px;background:var(--bg);border:1px solid var(--border);
+    border-radius:14px;margin-bottom:16px;
+  }
+  .atual .cidade{font-size:1.1rem;color:var(--muted)}
+  .atual .icone{font-size:3.4rem;margin:6px 0}
+  .atual .temp{font-size:3rem;font-weight:800;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .atual .desc{color:var(--muted);margin-top:4px}
+  .detalhes{display:flex;gap:12px;margin-bottom:16px}
+  .detalhes div{
+    flex:1;background:var(--bg);border:1px solid var(--border);border-radius:12px;
+    padding:14px;text-align:center;font-size:.85rem;color:var(--muted);
+  }
+  .detalhes b{display:block;color:var(--text);font-size:1.05rem;margin-top:3px}
+  .previsao{display:flex;gap:10px}
+  .dia{
+    flex:1;background:var(--bg);border:1px solid var(--border);border-radius:12px;
+    padding:13px 6px;text-align:center;font-size:.8rem;color:var(--muted);
+  }
+  .dia .ic{font-size:1.5rem;margin:5px 0}
+  .dia b{color:var(--text)}
+</style>
+</head>
+<body>
+<a class="voltar" href="index.html">← voltar ao portfólio</a>
+<div class="app">
+  <h1>🌦️ App de <span>Clima</span></h1>
+  <p class="sub">Digite uma cidade e veja o tempo agora + 4 dias de previsão.</p>
+  <form id="form">
+    <input id="cidade" placeholder="Ex.: São Paulo, Curitiba, Lisboa..." autofocus>
+    <button type="submit">Buscar</button>
+  </form>
+  <p class="msg" id="msg">Aguardando busca…</p>
+  <div class="resultado" id="resultado">
+    <div class="atual">
+      <div class="cidade" id="nomeCidade"></div>
+      <div class="icone" id="icone"></div>
+      <div class="temp" id="temp"></div>
+      <div class="desc" id="desc"></div>
+    </div>
+    <div class="detalhes">
+      <div>Sensação<b id="sensacao"></b></div>
+      <div>Umidade<b id="umidade"></b></div>
+      <div>Vento<b id="vento"></b></div>
+    </div>
+    <div class="previsao" id="previsao"></div>
+  </div>
+</div>
+<script>
+  const codigos={
+    0:['☀️','Céu limpo'],1:['🌤️','Quase limpo'],2:['⛅','Parcialmente nublado'],3:['☁️','Nublado'],
+    45:['🌫️','Neblina'],48:['🌫️','Neblina com gelo'],
+    51:['🌦️','Garoa leve'],53:['🌦️','Garoa'],55:['🌧️','Garoa forte'],
+    61:['🌧️','Chuva leve'],63:['🌧️','Chuva'],65:['⛈️','Chuva forte'],
+    66:['🌧️','Chuva congelante'],67:['🌧️','Chuva congelante forte'],
+    71:['🌨️','Neve leve'],73:['🌨️','Neve'],75:['❄️','Neve forte'],77:['❄️','Granizo de neve'],
+    80:['🌦️','Pancadas leves'],81:['🌧️','Pancadas'],82:['⛈️','Pancadas fortes'],
+    85:['🌨️','Pancadas de neve'],86:['🌨️','Pancadas de neve fortes'],
+    95:['⛈️','Tempestade'],96:['⛈️','Tempestade c/ granizo'],99:['⛈️','Tempestade forte c/ granizo']
+  };
+  const cod=c=>codigos[c]||['🌡️','—'];
+  const msg=document.getElementById('msg');
+  const resultado=document.getElementById('resultado');
+
+  document.getElementById('form').onsubmit=async e=>{
+    e.preventDefault();
+    const nome=document.getElementById('cidade').value.trim();
+    if(!nome)return;
+    resultado.style.display='none';
+    msg.style.display='block';
+    msg.textContent='Buscando…';
+    try{
+      // 1) encontrar coordenadas da cidade
+      const g=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(nome)}&count=1&language=pt&format=json`).then(r=>r.json());
+      if(!g.results||!g.results.length){msg.textContent='Cidade não encontrada 😕 Tente outro nome.';return}
+      const c=g.results[0];
+      // 2) buscar clima
+      const w=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${c.latitude}&longitude=${c.longitude}&current=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,weather_code&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=auto&forecast_days=5`).then(r=>r.json());
+      const a=w.current;
+      const[ic,ds]=cod(a.weather_code);
+      document.getElementById('nomeCidade').textContent=`${c.name}${c.admin1?', '+c.admin1:''} · ${c.country||''}`;
+      document.getElementById('icone').textContent=ic;
+      document.getElementById('temp').textContent=Math.round(a.temperature_2m)+'°C';
+      document.getElementById('desc').textContent=ds;
+      document.getElementById('sensacao').textContent=Math.round(a.apparent_temperature)+'°C';
+      document.getElementById('umidade').textContent=a.relative_humidity_2m+'%';
+      document.getElementById('vento').textContent=Math.round(a.wind_speed_10m)+' km/h';
+      // previsão (pula hoje)
+      const dias=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+      const prev=document.getElementById('previsao');
+      prev.innerHTML='';
+      for(let i=1;i<5;i++){
+        const d=new Date(w.daily.time[i]+'T12:00');
+        const[pic]=cod(w.daily.weather_code[i]);
+        prev.innerHTML+=`<div class="dia">${dias[d.getDay()]}<div class="ic">${pic}</div><b>${Math.round(w.daily.temperature_2m_max[i])}°</b> / ${Math.round(w.daily.temperature_2m_min[i])}°</div>`;
+      }
+      msg.style.display='none';
+      resultado.style.display='block';
+    }catch(err){
+      msg.textContent='Erro ao buscar. Verifique sua conexão e tente de novo.';
+    }
+  };
+</script>
+</body>
+</html>
