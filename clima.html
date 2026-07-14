@@ -39,7 +39,8 @@
     border-radius:14px;margin-bottom:16px;
   }
   .atual .cidade{font-size:1.1rem;color:var(--muted)}
-  .atual .icone{font-size:3.4rem;margin:6px 0}
+  .atual .icone{margin:10px 0}
+  .atual .icone svg{width:64px;height:64px}
   .atual .temp{font-size:3rem;font-weight:800;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
   .atual .desc{color:var(--muted);margin-top:4px}
   .detalhes{display:flex;gap:12px;margin-bottom:16px}
@@ -53,14 +54,15 @@
     flex:1;background:var(--bg);border:1px solid var(--border);border-radius:12px;
     padding:13px 6px;text-align:center;font-size:.8rem;color:var(--muted);
   }
-  .dia .ic{font-size:1.5rem;margin:5px 0}
+  .dia .ic{margin:6px 0}
+  .dia .ic svg{width:26px;height:26px}
   .dia b{color:var(--text)}
 </style>
 </head>
 <body>
 <a class="voltar" href="index.html">← voltar ao portfólio</a>
 <div class="app">
-  <h1>🌦️ App de <span>Clima</span></h1>
+  <h1><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-4px;margin-right:8px"><g stroke="#fbbf24"><path d="M12 2v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="M20 12h2"/><path d="m19.07 4.93-1.41 1.41"/><path d="M15.947 12.65a4 4 0 0 0-5.925-4.128"/></g><path stroke="#8b98b8" d="M13 22H7a5 5 0 1 1 4.9-6H13a3 3 0 0 1 0 6Z"/></svg>App de <span>Clima</span></h1>
   <p class="sub">Digite uma cidade e veja o tempo agora + 4 dias de previsão.</p>
   <form id="form">
     <input id="cidade" placeholder="Ex.: São Paulo, Curitiba, Lisboa..." autofocus>
@@ -83,18 +85,31 @@
   </div>
 </div>
 <script>
-  const codigos={
-    0:['☀️','Céu limpo'],1:['🌤️','Quase limpo'],2:['⛅','Parcialmente nublado'],3:['☁️','Nublado'],
-    45:['🌫️','Neblina'],48:['🌫️','Neblina com gelo'],
-    51:['🌦️','Garoa leve'],53:['🌦️','Garoa'],55:['🌧️','Garoa forte'],
-    61:['🌧️','Chuva leve'],63:['🌧️','Chuva'],65:['⛈️','Chuva forte'],
-    66:['🌧️','Chuva congelante'],67:['🌧️','Chuva congelante forte'],
-    71:['🌨️','Neve leve'],73:['🌨️','Neve'],75:['❄️','Neve forte'],77:['❄️','Granizo de neve'],
-    80:['🌦️','Pancadas leves'],81:['🌧️','Pancadas'],82:['⛈️','Pancadas fortes'],
-    85:['🌨️','Pancadas de neve'],86:['🌨️','Pancadas de neve fortes'],
-    95:['⛈️','Tempestade'],96:['⛈️','Tempestade c/ granizo'],99:['⛈️','Tempestade forte c/ granizo']
+  // ícones SVG (estilo lucide)
+  const ICONES={
+    sol:'<g stroke="#fbbf24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></g>',
+    solNuvem:'<g stroke="#fbbf24"><path d="M12 2v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="M20 12h2"/><path d="m19.07 4.93-1.41 1.41"/><path d="M15.947 12.65a4 4 0 0 0-5.925-4.128"/></g><path stroke="#8b98b8" d="M13 22H7a5 5 0 1 1 4.9-6H13a3 3 0 0 1 0 6Z"/>',
+    nuvem:'<path stroke="#8b98b8" d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>',
+    neblina:'<path stroke="#8b98b8" d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path stroke="#8b98b8" d="M16 17H7M17 21H9"/>',
+    garoa:'<path stroke="#8b98b8" d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path stroke="#4f8cff" d="M8 19v1M8 14v1M16 19v1M16 14v1M12 21v1M12 16v1"/>',
+    chuva:'<path stroke="#8b98b8" d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path stroke="#4f8cff" d="M16 14v6M8 14v6M12 16v6"/>',
+    tempestade:'<path stroke="#8b98b8" d="M6 16.326A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 .5 8.973"/><path stroke="#fbbf24" d="m13 12-3 5h4l-3 5"/>',
+    neve:'<path stroke="#8b98b8" d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path stroke="#a5b4fc" stroke-width="2.6" d="M8 15h.01M8 19h.01M12 17h.01M12 21h.01M16 15h.01M16 19h.01"/>',
+    termo:'<path stroke="#4f8cff" d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"/>'
   };
-  const cod=c=>codigos[c]||['🌡️','—'];
+  const svgIcone=(k,s)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICONES[k]||ICONES.termo}</svg>`;
+  const codigos={
+    0:['sol','Céu limpo'],1:['solNuvem','Quase limpo'],2:['solNuvem','Parcialmente nublado'],3:['nuvem','Nublado'],
+    45:['neblina','Neblina'],48:['neblina','Neblina com gelo'],
+    51:['garoa','Garoa leve'],53:['garoa','Garoa'],55:['chuva','Garoa forte'],
+    61:['chuva','Chuva leve'],63:['chuva','Chuva'],65:['tempestade','Chuva forte'],
+    66:['chuva','Chuva congelante'],67:['chuva','Chuva congelante forte'],
+    71:['neve','Neve leve'],73:['neve','Neve'],75:['neve','Neve forte'],77:['neve','Granizo de neve'],
+    80:['garoa','Pancadas leves'],81:['chuva','Pancadas'],82:['tempestade','Pancadas fortes'],
+    85:['neve','Pancadas de neve'],86:['neve','Pancadas de neve fortes'],
+    95:['tempestade','Tempestade'],96:['tempestade','Tempestade c/ granizo'],99:['tempestade','Tempestade forte c/ granizo']
+  };
+  const cod=c=>codigos[c]||['termo','—'];
   const msg=document.getElementById('msg');
   const resultado=document.getElementById('resultado');
 
@@ -108,14 +123,14 @@
     try{
       // 1) encontrar coordenadas da cidade
       const g=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(nome)}&count=1&language=pt&format=json`).then(r=>r.json());
-      if(!g.results||!g.results.length){msg.textContent='Cidade não encontrada 😕 Tente outro nome.';return}
+      if(!g.results||!g.results.length){msg.textContent='Cidade não encontrada. Tente outro nome.';return}
       const c=g.results[0];
       // 2) buscar clima
       const w=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${c.latitude}&longitude=${c.longitude}&current=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,weather_code&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=auto&forecast_days=5`).then(r=>r.json());
       const a=w.current;
       const[ic,ds]=cod(a.weather_code);
       document.getElementById('nomeCidade').textContent=`${c.name}${c.admin1?', '+c.admin1:''} · ${c.country||''}`;
-      document.getElementById('icone').textContent=ic;
+      document.getElementById('icone').innerHTML=svgIcone(ic,64);
       document.getElementById('temp').textContent=Math.round(a.temperature_2m)+'°C';
       document.getElementById('desc').textContent=ds;
       document.getElementById('sensacao').textContent=Math.round(a.apparent_temperature)+'°C';
@@ -128,7 +143,7 @@
       for(let i=1;i<5;i++){
         const d=new Date(w.daily.time[i]+'T12:00');
         const[pic]=cod(w.daily.weather_code[i]);
-        prev.innerHTML+=`<div class="dia">${dias[d.getDay()]}<div class="ic">${pic}</div><b>${Math.round(w.daily.temperature_2m_max[i])}°</b> / ${Math.round(w.daily.temperature_2m_min[i])}°</div>`;
+        prev.innerHTML+=`<div class="dia">${dias[d.getDay()]}<div class="ic">${svgIcone(pic,26)}</div><b>${Math.round(w.daily.temperature_2m_max[i])}°</b> / ${Math.round(w.daily.temperature_2m_min[i])}°</div>`;
       }
       msg.style.display='none';
       resultado.style.display='block';

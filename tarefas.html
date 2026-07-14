@@ -67,7 +67,7 @@
 <body>
 <a class="voltar" href="index.html">← voltar ao portfólio</a>
 <div class="app">
-  <h1>✅ Minhas <span>Tarefas</span></h1>
+  <h1><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-4px;margin-right:8px"><path d="m9 11 3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Minhas <span>Tarefas</span></h1>
   <p class="sub">Organize seu dia. Suas tarefas ficam salvas no navegador.</p>
   <form id="form">
     <input type="text" id="entrada" placeholder="O que precisa ser feito?" maxlength="120" autofocus>
@@ -99,7 +99,7 @@
       filtro==='todas'||(filtro==='ativas'&&!t.feita)||(filtro==='feitas'&&t.feita)
     );
     if(visiveis.length===0){
-      lista.innerHTML='<p class="vazio">Nenhuma tarefa por aqui 🎉</p>';
+      lista.innerHTML='<p class="vazio">Nenhuma tarefa por aqui — bom descanso!</p>';
     }
     visiveis.forEach(t=>{
       const li=document.createElement('li');
